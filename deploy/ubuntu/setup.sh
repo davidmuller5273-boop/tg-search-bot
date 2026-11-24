@@ -15,6 +15,7 @@ fi
 
 mkdir -p "$APP_DIR/data" "$APP_DIR/backups"
 
+umask 022
 if [[ ! -x "$APP_DIR/.venv/bin/python" ]]; then
   "$PYTHON_BIN" -m venv "$APP_DIR/.venv"
 fi
@@ -49,6 +50,9 @@ WantedBy=multi-user.target
 UNIT
 
 chown -R root:root "$APP_DIR"
+# 服务用 $APP_USER 运行：程序和 .venv 必须对它可读、目录可进入、可执行文件保持可执行
+# （服务器 umask 为 027 时 venv 会是 750/640，导致 203/EXEC Permission denied）
+chmod -R u+rwX,go+rX,go-w "$APP_DIR"
 chown -R "$APP_USER:$APP_USER" "$APP_DIR/data" "$APP_DIR/backups"
 chown "$APP_USER:$APP_USER" "$APP_DIR/.env"
 chmod 600 "$APP_DIR/.env"
